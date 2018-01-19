@@ -1,7 +1,7 @@
 from airflow.hooks.S3_hook import S3Hook
 from airflow.models import BaseOperator
 
-from freshdesk_plugin.hooks.freshdesk_hook import FreshdeskHook
+from airflow.hooks.http_hook import HttpHook
 
 from dateutil.parser import parse
 from tempfile import NamedTemporaryFile
@@ -13,16 +13,18 @@ import urllib
 mappings = {
     'satisfaction_ratings': {
         'endpoint': 'surveys/satisfaction_ratings'
-    }, 
+    },
     'conversations': {
-        'parent': 'tickets', 
+        'parent': 'tickets',
         'endpoint': 'tickets/{}/conversations'
-    }, 
+    },
     'time_entries': {
-        'parent': 'tickets', 
+        'parent': 'tickets',
         'endpoint': 'tickets/{}/time_entries'
     }
 }
+
+
 class FreshdeskToS3Operator(BaseOperator):
     """
     Trello to S3 Operator
@@ -67,7 +69,7 @@ class FreshdeskToS3Operator(BaseOperator):
 
         self.freshdesk_conn_id = freshdesk_conn_id
         self.freshdesk_endpoint = freshdesk_endpoint
-   
+
         self.updated_at = parse(updated_at) if updated_at else None
 
         self.s3_conn_id = s3_conn_id
@@ -86,12 +88,12 @@ class FreshdeskToS3Operator(BaseOperator):
         while 'link' in response.headers:
             response = self.hook.run(response.headers['link'])
             results.extend(response.json())
-        # filter the results 
-        if self.updated_at:
-          results = [x for x in results
-                     if (not 'updated_at' in x) or
-                     (parse(x['updated_at']).replace(tzinfo=None) > self.updated_at)]
 
+        # filter results
+        if self.updated_at:
+            results = [x for x in results
+                       if (not 'updated_at' in x) or
+                       (parse(x['updated_at']).replace(tzinfo=None) > self.updated_at)]
 
         return results
 
@@ -102,7 +104,9 @@ class FreshdeskToS3Operator(BaseOperator):
         and write it to a file.
         """
         logging.info("Prepping to gather data from Freshdesk")
-        self.hook = FreshdeskHook(
+
+        self.hook = HttpHook(
+            method='GET',
             http_conn_id=self.freshdesk_conn_id
         )
 
@@ -111,7 +115,7 @@ class FreshdeskToS3Operator(BaseOperator):
             " {0} object".format(self.freshdesk_endpoint)
         )
 
-        if self.freshdesk_endpoint in mappings: 
+        if self.freshdesk_endpoint in mappings:
             if 'parent' in mappings[self.freshdesk_endpoint]:
                 parent_endpoint = mappings[self.freshdesk_endpoint]['parent']
                 parents = self.hook.run(parent_endpoint).json()
@@ -122,9 +126,10 @@ class FreshdeskToS3Operator(BaseOperator):
                     response = self.get_all(
                         mappings[self.freshdesk_endpoint]['endpoint'].format(parent_id))
                     results.extend(response)
-            else: 
-                results = self.get_all(mappings[self.freshdesk_endpoint]['endpoint'])
-        else: 
+            else:
+                results = self.get_all(
+                    mappings[self.freshdesk_endpoint]['endpoint'])
+        else:
             results = self.get_all(self.freshdesk_endpoint)
 
         with NamedTemporaryFile("w") as tmp:
@@ -139,7 +144,9 @@ class FreshdeskToS3Operator(BaseOperator):
                 key=self.s3_key,
                 bucket_name=self.s3_bucket,
                 replace=True
-
             )
+
             dest_s3.connection.close()
             tmp.close()
+
+            logging.info('Query finished')
