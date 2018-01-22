@@ -149,8 +149,7 @@ class FreshdeskToS3Operator(BaseOperator, SkipMixin):
             # Write the results to a temporary file and save that file to s3.
             with NamedTemporaryFile("w") as tmp:
                 for result in results:
-                    filtered_result = self.filter_fields(result)
-                    tmp.write(json.dumps(filtered_result) + '\n')
+                    tmp.write(json.dumps(result) + '\n')
 
                 tmp.flush()
 
