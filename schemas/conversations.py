@@ -1,0 +1,17 @@
+conversations = [
+    {'name': 'id', 'type': 'BIGINT'},
+    {'name': 'private', 'type': 'BOOLEAN'},
+    {"name": "updated_at", 'type': "TIMESTAMP WITH TIME ZONE"},
+    {'name': 'body', 'type': 'VARCHAR(10240)'},
+    {'name': 'source', 'type': 'INT'},
+    {'name': 'to_emails', 'type': 'varchar(255)'},
+    {'name': 'ticket_id', 'type': 'INT'},
+    {'name': 'created_at', 'type': 'TIMESTAMP WITH TIME ZONE'},
+    {'name': 'support_email', 'type': 'VARCHAR(255)'},
+    {'name': 'body_text', 'type': 'VARCHAR(10240)'},
+    {'name': 'cc_emails', 'type': 'VARCHAR(255)'},
+    {'name': 'bcc_emails', 'type': 'VARCHAR(255)'},
+    {'name': 'from_email', 'type': 'VARCHAR(255)'},
+    {'name': 'user_id', 'type': 'BIGINT'},
+    {'name': 'incoming', 'type': 'BOOLEAN'},
+    {'name': 'attachments', 'type': 'VARCHAR(255)'}]
