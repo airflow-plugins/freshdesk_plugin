@@ -1,5 +1,6 @@
 from tempfile import NamedTemporaryFile
 from dateutil.parser import parse
+from flatten_json import flatten
 import logging
 import json
 
@@ -146,8 +147,14 @@ class FreshdeskToS3Operator(BaseOperator, SkipMixin):
         results = response.json()
 
         while 'link' in response.headers:
-            response = self.hook.run(response.headers['link'])
-            results.extend(response.json())
+            link = response.headers['link']
+            link = link[link.find("?") + 1:link.find(">")]
+            response = self.hook.run(endpoint + '?' + link)
+            print(type(response.json()))
+            print(len(response.json()))
+            m = response.json()
+            results.extend(flatten(x) for x in m)
+
 
         # filter results
         if self.updated_at:
