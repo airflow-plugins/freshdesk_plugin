@@ -33,10 +33,10 @@ class FreshdeskToS3Operator(BaseOperator, SkipMixin):
                                     the S3 credentials.
     :type s3_conn_id:               string
     :param s3_bucket:               The S3 bucket to be used to store
-                                    the Marketo data.
+                                    the Freshdesk data.
     :type s3_bucket:                string
     :param s3_key:                  The S3 key to be used to store
-                                    the Marketo data.
+                                    the Freshdesk data.
     :type s3_bucket:                string
     :param updated_at:              replication key
     :type updated_at:               string
